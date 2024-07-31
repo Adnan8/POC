@@ -1,0 +1,76 @@
+﻿@page "/books"
+@using GraphQL
+@using GraphQL.Client.Abstractions
+@using POC.Application.DTO
+@using POC.BlazorApp.GraphQLServices
+@* @inject IGraphQLClient GraphQLClient *@
+@inject GraphQLService GraphQLService
+@using Syncfusion;
+@using Syncfusion.Blazor.Grids
+
+<h3>Books</h3>
+<SfGrid DataSource="@Books" AllowPaging="true">
+    <GridColumns>
+        <GridColumn Field="Id" HeaderText="ID" Width="100" TextAlign="TextAlign.Right"></GridColumn>
+        <GridColumn Field="Title" HeaderText="Title" Width="200"></GridColumn>
+        <GridColumn Field="Author.Name" HeaderText="Author" Width="200"></GridColumn>
+    </GridColumns>
+</SfGrid>
+
+@* <button @onclick="AddBook">Add Book</button> *@
+<EditForm Model="@newBook" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="title">Title:</label>
+        <InputText id="title" class="form-control" @bind-Value="newBook.Title" />
+    </div>
+
+    <div class="form-group">
+        <label for="isbn">ISBN:</label>
+        <InputText id="isbn" class="form-control" @bind-Value="newBook.ISBN" />
+    </div>
+
+    <div class="form-group">
+        <label for="authorId">Author ID:</label>
+        <InputNumber id="authorId" class="form-control" @bind-Value="newBook.AuthorId" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Book</button>
+</EditForm>
+@code {
+    private List<BookDTO> Books { get; set; } = new List<BookDTO>();
+    private BookDTO newBook = new BookDTO();
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await GraphQLService.GetAllBooksAsync();
+            Books = response;
+        }
+        catch (Exception ex)
+        {
+
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
+    }
+
+    private async Task HandleValidSubmit() 
+    {
+        try
+        {
+            var addedBook = await GraphQLService.AddBookAsync(newBook);
+
+            Books.Add(addedBook);
+            newBook = new BookDTO(); 
+            // var response = await GraphQLService.GetAllBooksAsync();
+            // Books = response;
+            StateHasChanged(); 
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
+    }
+}

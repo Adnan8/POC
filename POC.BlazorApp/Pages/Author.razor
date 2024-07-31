@@ -1,0 +1,66 @@
+﻿@page "/authors"
+@using GraphQL
+@using GraphQL.Client.Abstractions
+@using POC.Application.DTO
+@using POC.BlazorApp.GraphQLServices
+@* @inject IGraphQLClient GraphQLClient *@
+@inject GraphQLService GraphQLService
+@using Syncfusion;
+@using Syncfusion.Blazor.Grids
+
+<h3>Author</h3>
+<SfGrid DataSource="@Authors" AllowPaging="true">
+    <GridColumns>
+        <GridColumn Field="Id" HeaderText="ID" Width="100" TextAlign="TextAlign.Right"></GridColumn>
+        <GridColumn Field="Name" HeaderText="Name" Width="200"></GridColumn>
+    </GridColumns>
+</SfGrid>
+
+<EditForm Model="@newAuthor" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="title">Name:</label>
+        <InputText id="Name" class="form-control" @bind-Value="newAuthor.Name" />
+    </div>
+
+
+    <button type="submit" class="btn btn-primary">Add Author</button>
+</EditForm>
+@code {
+    private List<AuthorDTO> Authors { get; set; } = new List<AuthorDTO>();
+    private AuthorDTO newAuthor = new AuthorDTO();
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await GraphQLService.GetAllAuthorsAsync();
+            Authors = response;
+        }
+        catch (Exception ex)
+        {
+
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
+    }
+
+    private async Task HandleValidSubmit() 
+    {
+        try
+        {
+            var addedAuthor = await GraphQLService.AddAuthorAsync(newAuthor);
+
+            Authors.Add(addedAuthor);
+            newAuthor = new AuthorDTO();
+            // var response = await GraphQLService.GetAllAuthorsAsync();
+            // Authors = response;
+            StateHasChanged(); 
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
+    }
+
+}
